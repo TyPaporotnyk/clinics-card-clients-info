@@ -1,0 +1,7 @@
+*__pychache__/
+.vscode
+.idea
+.env
+test_data/
+data/*.json
+test.py
