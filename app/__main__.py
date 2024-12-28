@@ -116,11 +116,11 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
     )
 
     previous_patient_row_position = None
-    # current_date = datetime.now()
-    # current_date = datetime(current_date.year, current_date.month, current_date.day)
+    current_date = datetime.now()
+    current_date = datetime(current_date.year, current_date.month, current_date.day)
     # payment_date_position = get_payment_date_position(current_date)
 
-    current_date = datetime(year=2024, month=11, day=1)
+    # current_date = datetime(year=2024, month=11, day=1)
 
     for patient in patients:
         is_patient_exist = False
