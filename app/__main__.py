@@ -137,8 +137,6 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             else:
                 patient_row_position = previous_patient_row_position + 1
 
-        previous_patient_row_position = patient_row_position
-
         def get_inisert_patient_values(patient: Patient):
             full_name = f"{patient.last_name} {patient.first_name}"
             first_doctor = patient.visits[0].doctor if patient.visits else ""
@@ -182,14 +180,30 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
                 else ""
             )
             treatment_plan = int(float(treatment_plan)) if treatment_plan else ""
+            
+            visits_count = len(
+                [visit for visit in patient.visits if visit.status == "VISITED"]
+            )
+            visits_count = visits_count if visits_count else ""
+            
             google_sheet_client.update_element_at(
                 ColumnElementId.TREATMENT_PLAN.value,
                 patient_row_position,
                 treatment_plan,
             )
+            google_sheet_client.update_element_at(
+                ColumnElementId.VISITS_COUNT.value,
+                patient_row_position,
+                visits_count,
+            )
+            
             logger.info(
                 "Update patient %s treatment plan to: %s", patient.code, treatment_plan
             )
+            logger.info(
+                "Update patient %s visits count to: %s", patient.code, visits_count
+            )
+            time.sleep(1)
 
         time.sleep(1)
 
