@@ -21,7 +21,9 @@ class ClinicsCardPayment(ClinicsCard):
                 patient_id=raw_payment["patient_id"],
                 amount=raw_payment["amount"],
                 type=raw_payment["type"],
-                date_created=datetime.strptime(raw_payment["date_created"], "%Y-%m-%d %H:%M:%S"),
+                date_created=datetime.strptime(
+                    raw_payment["date_created"], "%Y-%m-%d %H:%M:%S"
+                ),
                 currency=(
                     raw_payment["cash_desk"]["currency"]
                     if raw_payment["cash_desk"] is not None
@@ -35,5 +37,5 @@ class ClinicsCardPayment(ClinicsCard):
             )
             for raw_payment in raw_payments
         ]
-        
+
         return payments

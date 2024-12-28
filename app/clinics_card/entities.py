@@ -11,7 +11,7 @@ class Payment:
     currency: str | None
     status: str | None
     date_created: datetime
-    
+
     def __hash__(self):
         return int(self.id)
 

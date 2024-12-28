@@ -53,7 +53,7 @@ class GoogleSheetsClient:
             return last_cell.col, last_cell.row
         else:
             raise ValueError(f"Value '{value}' not found in the sheet")
-    
+
     def insert_row_at(self, row_index: int, values: list):
         self.sheet.insert_row(values, row_index)
 

@@ -17,7 +17,7 @@ class ClinicsCardPatient(ClinicsCard):
                 last_visit_date=raw_patient["last_visit_date"],
                 code=raw_patient["code"],
                 curator=raw_patient["curator"],
-                main_plans_id=raw_patient["main_plans_id"]
+                main_plans_id=raw_patient["main_plans_id"],
             )
             for raw_patient in raw_patients
         ]
