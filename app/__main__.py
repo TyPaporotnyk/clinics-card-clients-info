@@ -143,6 +143,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             visits_count = len(
                 [visit for visit in patient.visits if visit.status == "VISITED"]
             )
+            visits_count = visits_count if visits_count else ""
             treatment_plan = (
                 patient.main_plans.plan_total_with_discount
                 if patient.main_plans
@@ -164,7 +165,8 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
         if not is_patient_exist:
             inser_patint_values = get_inisert_patient_values(patient=patient)
             google_sheet_client.write_row(
-                row_index=patient_row_position, values=inser_patint_values
+                # row_index=patient_row_position, values=inser_patint_values
+                inser_patint_values
             )
             logger.info(
                 "Insert new patient %s position %s", patient.code, patient_row_position
