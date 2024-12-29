@@ -70,13 +70,13 @@ def get_all_patient_data() -> list[Patient]:
 
     patients = patient_client.get_all_patients()
     visits = visits_client.get_visits_by_period(
-        date_from="2020-01-01", date_to=get_current_date_iso_string()
+        date_from="2023-01-01", date_to=get_current_date_iso_string()
     )
     payments = payment_client.get_payments_by_period(
-        date_from="2020-01-01", date_to=get_current_date_iso_string()
+        date_from="2023-01-01", date_to=get_current_date_iso_string()
     )
     plans = plans_client.get_plans_by_period(
-        date_from="2020-01-01", date_to=get_current_date_iso_string()
+        date_from="2023-01-01", date_to=get_current_date_iso_string()
     )
 
     plan_map: dict[str, Plan] = {plan.id: plan for plan in plans}
@@ -151,6 +151,9 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             )
             treatment_plan = int(float(treatment_plan)) if treatment_plan else ""
 
+            old_payments = sum([int(float(payment.amount)) for payment in patient.payments if payment.date_created < datetime(year=2024, month=7, day=1)])
+            old_payments = old_payments if old_payments else ""
+            
             return [
                 "",
                 full_name,
@@ -160,6 +163,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
                 visits_count,
                 "",
                 treatment_plan,
+                old_payments
             ]
 
         if not is_patient_exist:
