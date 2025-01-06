@@ -153,7 +153,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 
             # old_payments = sum([int(float(payment.amount)) for payment in patient.payments if payment.date_created < datetime(year=2024, month=7, day=1)])
             # old_payments = old_payments if old_payments else ""
-            
+
             return [
                 "",
                 full_name,
@@ -184,12 +184,12 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
                 else ""
             )
             treatment_plan = int(float(treatment_plan)) if treatment_plan else ""
-            
+
             visits_count = len(
                 [visit for visit in patient.visits if visit.status == "VISITED"]
             )
             visits_count = visits_count if visits_count else ""
-            
+
             # Обновляем План лечения
             google_sheet_client.update_element_at(
                 ColumnElementId.TREATMENT_PLAN.value,
@@ -202,7 +202,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
                 patient_row_position,
                 visits_count,
             )
-            
+
             logger.info(
                 "Update patient %s treatment plan to: %s", patient.code, treatment_plan
             )
@@ -225,7 +225,9 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             if not patient_payment_sums.get(patient_payment.date_created):
                 patient_payment_sums[patient_payment.date_created] = 0
 
-            patient_payment_sums[patient_payment.date_created] += int(float(patient_payment.amount))
+            patient_payment_sums[patient_payment.date_created] += int(
+                float(patient_payment.amount)
+            )
 
         # Обновляем поля оплат пациента
         for patient_payment_date_created, payment_sum in patient_payment_sums.items():
