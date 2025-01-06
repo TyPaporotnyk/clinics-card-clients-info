@@ -162,16 +162,14 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
                 first_doctor,
                 visits_count,
                 "",
+                "",
                 treatment_plan,
                 # old_payments
             ]
 
         if not is_patient_exist:
             inser_patint_values = get_inisert_patient_values(patient=patient)
-            google_sheet_client.write_row(
-                # row_index=patient_row_position, values=inser_patint_values
-                inser_patint_values
-            )
+            google_sheet_client.write_row(inser_patint_values)
             logger.info(
                 "Insert new patient %s position %s", patient.code, patient_row_position
             )
@@ -192,11 +190,13 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             )
             visits_count = visits_count if visits_count else ""
             
+            # Обновляем План лечения
             google_sheet_client.update_element_at(
                 ColumnElementId.TREATMENT_PLAN.value,
                 patient_row_position,
                 treatment_plan,
             )
+            # Обновлям Количество визитов
             google_sheet_client.update_element_at(
                 ColumnElementId.VISITS_COUNT.value,
                 patient_row_position,
@@ -214,7 +214,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
         time.sleep(1)
 
         # Часть функционала для загрузки всех оплат пациента за опереденный промежуток
-        patient_payment_sums: dict[Payment, int] = {}
+        patient_payment_sums: dict[datetime, int] = {}
 
         # Получаем оплаты пациента групируем их по датам, складывая их суммы если дата создания больше или равна указанной
         for patient_payment in patient.payments:
@@ -222,15 +222,15 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             if patient_payment.date_created < current_date:
                 continue
 
-            if not patient_payment_sums.get(patient_payment):
-                patient_payment_sums[patient_payment] = 0
+            if not patient_payment_sums.get(patient_payment.date_created):
+                patient_payment_sums[patient_payment.date_created] = 0
 
-            patient_payment_sums[patient_payment] += int(float(patient_payment.amount))
+            patient_payment_sums[patient_payment.date_created] += int(float(patient_payment.amount))
 
         # Обновляем поля оплат пациента
-        for patient_payment, payment_sum in patient_payment_sums.items():
+        for patient_payment_date_created, payment_sum in patient_payment_sums.items():
             payment_date_position = get_payment_date_position(
-                patient_payment.date_created, google_sheet_client=google_sheet_client
+                patient_payment_date_created, google_sheet_client=google_sheet_client
             )
             patient_payment_date_position = (
                 payment_date_position[0],
