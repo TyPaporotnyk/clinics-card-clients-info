@@ -23,7 +23,10 @@ class GoogleSheetsClient:
         return gspread.authorize(credentials)
 
     def write_row(self, row):
-        self.sheet.append_row(row)
+        all_values = self.sheet.col_values(3)
+        last_row_index = len(all_values)
+
+        self.sheet.insert_row(row, last_row_index + 1)
         time.sleep(1)
 
     def get_column_values(self) -> list[str]:
