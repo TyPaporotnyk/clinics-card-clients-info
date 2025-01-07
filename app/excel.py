@@ -1,3 +1,5 @@
+import time
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -8,9 +10,7 @@ class GoogleSheetsClient:
         self.worksheet_name = worksheet_name
         self.token_path = token_path
         self.client = self._get_google_sheets_client()
-        self.sheet = self.client.open_by_key(self.google_sheets_key).worksheet(
-            self.worksheet_name
-        )
+        self.sheet = self.client.open_by_key(self.google_sheets_key).worksheet(self.worksheet_name)
 
     def _get_google_sheets_client(self):
         scope = [
@@ -19,28 +19,35 @@ class GoogleSheetsClient:
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive",
         ]
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            self.token_path, scope
-        )
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.token_path, scope)
         return gspread.authorize(credentials)
 
     def write_row(self, row):
         self.sheet.append_row(row)
+        time.sleep(1)
 
     def get_column_values(self) -> list[str]:
-        return self.sheet.col_values(1)
+        value = self.sheet.col_values(1)
+        time.sleep(1)
+        return value
 
     def insert_element_at(self, row: int, col: int, value):
         self.sheet.update_cell(row, col, value)
+        time.sleep(1)
 
     def get_element_at(self, col: int, row: int):
-        return self.sheet.cell(row, col).value
+        value = self.sheet.cell(row, col).value
+        time.sleep(1)
+        return value
 
     def update_element_at(self, col: int, row: int, value):
         self.sheet.update_cell(row, col, f"{value}")
+        time.sleep(1)
 
     def find(self, value: str) -> tuple[int, int]:
         cell = self.sheet.find(value)
+        time.sleep(1)
+
         if cell:
             return cell.col, cell.row
         else:
@@ -48,6 +55,8 @@ class GoogleSheetsClient:
 
     def find_last(self, value: str):
         cells = self.sheet.findall(value)
+        time.sleep(1)
+
         if cells:
             last_cell = cells[-1]
             return last_cell.col, last_cell.row
@@ -56,6 +65,8 @@ class GoogleSheetsClient:
 
     def insert_row_at(self, row_index: int, values: list):
         self.sheet.insert_row(values, row_index)
+        time.sleep(1)
 
     def insert_column_at(self, col_index: int, values: list):
         self.sheet.insert_col(values, col_index)
+        time.sleep(1)

@@ -46,6 +46,7 @@ class Patient:
     first_visit_date: str | None
     last_visit_date: str | None
     main_plans_id: str | None
+    row_position: int | None = field(default=None)
     main_plans: Plan | None = field(default=None)
     payments: list[Payment] = field(default_factory=list, kw_only=True)
     visits: list[Visit] = field(default_factory=list, kw_only=True)
