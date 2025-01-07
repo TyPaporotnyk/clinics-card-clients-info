@@ -118,8 +118,8 @@ def get_inisert_patient_values(patient: Patient):
 
     return [
         "",
-        full_name,
         patient.code,
+        full_name,
         patient.curator,
         first_doctor,
         visits_count,
