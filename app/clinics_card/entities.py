@@ -37,6 +37,14 @@ class Visit:
 
 
 @dataclass
+class Invoice:
+    id: str
+    patient_id: str
+    date_created: datetime
+    amount: str
+
+
+@dataclass
 class Patient:
     id: str
     first_name: str
@@ -50,3 +58,4 @@ class Patient:
     main_plans: Plan | None = field(default=None)
     payments: list[Payment] = field(default_factory=list, kw_only=True)
     visits: list[Visit] = field(default_factory=list, kw_only=True)
+    invoices: list[Invoice] = field(default_factory=list, kw_only=True)
