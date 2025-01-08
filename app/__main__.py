@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 PAYMENT_DATE_INDEXES: dict[str, tuple[int, int]] = {}
-# CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-CURRENT_DATE = datetime(year=2023, month=1, day=1)
+CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+# CURRENT_DATE = datetime(year=2023, month=1, day=1)
 
 
 class ColumnElementId(Enum):
