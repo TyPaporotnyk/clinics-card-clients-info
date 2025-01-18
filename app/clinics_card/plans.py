@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.clinics_card.base import ClinicsCard
-from app.clinics_card.entities import Patient, Plan
+from app.clinics_card.entities import Plan
 
 
 class ClinicsCardPlan(ClinicsCard):

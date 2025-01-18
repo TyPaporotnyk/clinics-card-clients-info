@@ -41,14 +41,24 @@ def get_current_date_iso_string() -> str:
 
 def get_month_name(date: datetime) -> str:
     MONTH_NAMES_RU = [
-        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        "Январь",
+        "Февраль",
+        "Март",
+        "Апрель",
+        "Май",
+        "Июнь",
+        "Июль",
+        "Август",
+        "Сентябрь",
+        "Октябрь",
+        "Ноябрь",
+        "Декабрь",
     ]
     return MONTH_NAMES_RU[date.month - 1]
 
 
 def days_in_half_year_up_to(year, half, up_to_month, up_to_day):
-    start_month = 1 if half == 1 else 7 
+    start_month = 1 if half == 1 else 7
 
     total_days = 0
     for month in range(start_month, up_to_month + 1):
@@ -79,11 +89,7 @@ def get_payment_date_position(date: datetime, google_sheet_client: GoogleSheetsC
         half = get_half_year(date)
         half_str = get_half_year_str(date)
         half_str_position = google_sheet_client.find(half_str)
-        d_index = days_in_half_year_up_to(
-            date.year, half, 
-            date.month, 
-            date.day
-        )
+        d_index = days_in_half_year_up_to(date.year, half, date.month, date.day)
         payment_date_position = (half_str_position[0] + d_index - 1, 3)
         PAYMENT_DATE_INDEXES[date] = payment_date_position
 
@@ -112,18 +118,17 @@ def get_all_patient_data() -> list[Patient]:
         api_key=settings.CLINICS_CARD_API_KEY,
     )
 
-
     patients = patient_client.get_all_patients()
     visits = visits_client.get_visits_by_period(date_from="2023-01-01", date_to=get_current_date_iso_string())
     payments = payment_client.get_payments_by_period(date_from="2023-01-01", date_to=get_current_date_iso_string())
     plans = plans_client.get_plans_by_period(date_from="2023-01-01", date_to=get_current_date_iso_string())
     invoices = invoices_client.get_invoices_by_period(date_from="2023-01-01", date_to=get_current_date_iso_string())
-    
+
     plan_map: dict[str, Plan] = {plan.id: plan for plan in plans}
 
     patient_map: dict[str, Patient] = {}
 
-    for patient in patients:        
+    for patient in patients:
         patient.main_plans = plan_map.get(patient.main_plans_id)
         patient_map[patient.id] = patient
 
@@ -147,7 +152,7 @@ def get_all_patient_data() -> list[Patient]:
             continue
 
         patient_map[invoice.patient_id].invoices.append(invoice)
-    
+
     patients = patient_map.values()
     patients = sorted(patients, key=lambda x: int(x.code))
 
@@ -219,10 +224,7 @@ def update_patient_invoices(
 
         google_sheet_client.update_element_at(*patient_invoice_date_position, invoice_sum)
         logger.info(
-            "Insert patient %s invoice %s by the date: %s",
-            patient.code,
-            invoice_sum,
-            patient_invoice_date_created
+            "Insert patient %s invoice %s by the date: %s", patient.code, invoice_sum, patient_invoice_date_created
         )
 
 
@@ -275,7 +277,7 @@ def insert_patient_payment_count(
     for invoce in patient.invoices:
         if invoce.date_created < CURRENT_DATE:
             continue
-        
+
         if invoce.date_created not in patients_payments_count_grouped_by_date:
             patients_payments_count_grouped_by_date[invoce.date_created] = []
 
@@ -285,7 +287,10 @@ def insert_patient_payment_count(
             logger.debug("Added patient payment count to patient: %s", patient.code)
 
 
-def get_payment_count_position(date: datetime, google_sheet_client: GoogleSheetsClient,) -> tuple[int, int]:
+def get_payment_count_position(
+    date: datetime,
+    google_sheet_client: GoogleSheetsClient,
+) -> tuple[int, int]:
     date_month = get_month_name(date)
     position = google_sheet_client.find_last(date_month)
     position = (position[0], RowElementId.MONTH_COUNT.value)
@@ -298,7 +303,7 @@ def update_patients_payments_count(
 ):
     for payment_count_date, patients in patients_payments_count_grouped_by_date.items():
         payments_count = len(patients)
-        
+
         payment_count_position = get_payment_date_position(
             date=payment_count_date, google_sheet_client=google_sheet_client
         )
@@ -319,20 +324,22 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 
     for patient in patients:
         is_patient_exist = set_patient_row_position(
-            patient=patient, google_sheet_client=google_sheet_client,
+            patient=patient,
+            google_sheet_client=google_sheet_client,
         )
 
         if not is_patient_exist:
             insert_new_patient(patient=patient, google_sheet_client=google_sheet_client)
             set_patient_row_position(
-                patient=patient, google_sheet_client=google_sheet_client,
+                patient=patient,
+                google_sheet_client=google_sheet_client,
             )
         else:
             update_patient_treatment_plan(patient=patient, google_sheet_client=google_sheet_client)
             update_patient_visits_count(patient=patient, google_sheet_client=google_sheet_client)
 
         update_patient_invoices(patient=patient, google_sheet_client=google_sheet_client)
-        
+
         insert_patient_payment_count(
             patient=patient,
             patients_payments_count_grouped_by_date=patients_payments_count_grouped_by_date,

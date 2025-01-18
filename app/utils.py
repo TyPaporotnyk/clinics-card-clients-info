@@ -1,6 +1,7 @@
-import time
-from gspread.exceptions import APIError
 import logging
+import time
+
+from gspread.exceptions import APIError
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +14,12 @@ def retry_request(retries=5, delay=10):
                     return func(*args, **kwargs)
                 except APIError as e:
                     if e.response.status_code in [500, 503]:
-                        logger.warning("Retrying... (%s) wait for %s secconds", {attempt + 1}/{retries}, delay)
+                        logger.warning("Retrying... (%s) wait for %s secconds", {attempt + 1} / {retries}, delay)
                         time.sleep(delay)
                     else:
-                        raise 
+                        raise
             raise Exception("Max retries exceeded")
+
         return wrapper
+
     return decorator
