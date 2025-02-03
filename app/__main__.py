@@ -1,6 +1,6 @@
 import calendar
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta  # noqa
 from enum import Enum
 
 from httpx import Client
@@ -18,8 +18,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 PAYMENT_DATE_INDEXES: dict[str, tuple[int, int]] = {}
-CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-# CURRENT_DATE = datetime(year=2025, month=1, day=19)
+# CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=)  # noqa
+CURRENT_DATE = datetime(year=2022, month=1, day=19)  # noqa
+
+PAYMENT_DATE_INDEXES: dict[datetime, tuple[int, int]] = {}
+DATE_POSITIONS_INITIALIZED = False
 
 
 class ColumnElementId(Enum):
@@ -85,6 +88,33 @@ def get_half_year_str(target_date: datetime) -> str:
 
 
 def get_payment_date_position(date: datetime, google_sheet_client: GoogleSheetsClient):
+    global DATE_POSITIONS_INITIALIZED
+
+    if not DATE_POSITIONS_INITIALIZED:
+        dates_row = google_sheet_client.get_row_values(3)
+        current_half = None
+
+        for col_idx, value in enumerate(dates_row, start=1):
+            if not value:
+                continue
+
+            if "полугодие" in str(value):
+                current_half = value
+                continue
+
+            try:
+                day, month = map(int, value.split("."))
+
+                if current_half:
+                    year = int(current_half.split()[-1])
+                    current_date = datetime(year=year, month=month, day=day)
+
+                    PAYMENT_DATE_INDEXES[current_date] = (col_idx, 3)
+            except (ValueError, AttributeError):
+                continue
+
+        DATE_POSITIONS_INITIALIZED = True
+
     if date not in PAYMENT_DATE_INDEXES:
         half = get_half_year(date)
         half_str = get_half_year_str(date)
@@ -181,51 +211,44 @@ def get_inisert_patient_values(patient: Patient):
     ]
 
 
-def update_patient_treatment_plan(patient: Patient, google_sheet_client: GoogleSheetsClient):
+def update_patient_data(patient: Patient, google_sheet_client: GoogleSheetsClient):
     treatment_plan = patient.main_plans.plan_total_with_discount if patient.main_plans else ""
     treatment_plan = int(float(treatment_plan)) if treatment_plan else ""
 
-    google_sheet_client.update_element_at(
-        ColumnElementId.TREATMENT_PLAN.value,
-        patient.row_position,
-        treatment_plan,
-    )
-
-    logger.info("Update patient %s treatment plan to: %s", patient.code, treatment_plan)
-
-
-def update_patient_visits_count(patient: Patient, google_sheet_client: GoogleSheetsClient):
     visits_count = len([visit for visit in patient.visits if visit.status == "VISITED"])
     visits_count = visits_count if visits_count else ""
 
-    google_sheet_client.update_element_at(
-        ColumnElementId.VISITS_COUNT.value,
-        patient.row_position,
-        visits_count,
-    )
+    updates = [
+        (patient.row_position, ColumnElementId.TREATMENT_PLAN.value, treatment_plan),
+        (patient.row_position, ColumnElementId.VISITS_COUNT.value, visits_count),
+    ]
 
-    logger.info("Update patient %s visits count to: %s", patient.code, visits_count)
+    google_sheet_client.update_cells(updates)
+
+    logger.info("Updated patient %s: treatment plan=%s, visits count=%s", patient.code, treatment_plan, visits_count)
 
 
-def update_patient_invoices(
-    patient: Patient,
-    google_sheet_client: GoogleSheetsClient,
-):
+def update_patient_invoices(patient: Patient, google_sheet_client: GoogleSheetsClient):
     patient_invoice_sums = get_patient_invoice_sums_grouped_by_datetime(patient=patient)
+    updates = []
+    dates_and_sums = []
+
     for patient_invoice_date_created, invoice_sum in patient_invoice_sums.items():
         invoice_date_position = get_payment_date_position(
             patient_invoice_date_created, google_sheet_client=google_sheet_client
         )
 
-        patient_invoice_date_position = (
-            invoice_date_position[0],
-            patient.row_position,
-        )
+        patient_invoice_date_position = (patient.row_position, invoice_date_position[0])
 
-        google_sheet_client.update_element_at(*patient_invoice_date_position, invoice_sum)
-        logger.info(
-            "Insert patient %s invoice %s by the date: %s", patient.code, invoice_sum, patient_invoice_date_created
+        updates.append(
+            (patient_invoice_date_position[0], patient_invoice_date_position[1], invoice_sum)  # row  # col  # value
         )
+        dates_and_sums.append((patient_invoice_date_created, invoice_sum))
+
+    if updates:
+        google_sheet_client.update_cells(updates)
+        for date_created, invoice_sum in dates_and_sums:
+            logger.info("Insert patient %s invoice %s by the date: %s", patient.code, invoice_sum, date_created)
 
 
 def set_patient_row_position(
@@ -236,10 +259,9 @@ def set_patient_row_position(
     Returns:
         bool: return True if patient is exist
     """
-    full_name = f"{patient.last_name} {patient.first_name}"
     is_patient_exist = False
     try:
-        patient.row_position = google_sheet_client.find(full_name)[1]
+        patient.row_position = google_sheet_client.find(patient.code, in_column=4)[1]
 
         is_patient_exist = True
     except ValueError:
@@ -248,9 +270,10 @@ def set_patient_row_position(
     return is_patient_exist
 
 
-def insert_new_patient(patient: Patient, google_sheet_client: GoogleSheetsClient):
+def insert_new_patient(patient: Patient, nearest_patient: Patient | None, google_sheet_client: GoogleSheetsClient):
     inser_patint_values = get_inisert_patient_values(patient=patient)
-    google_sheet_client.write_row(inser_patint_values)
+    previous_patient_position_id = nearest_patient.row_position if nearest_patient else 7
+    google_sheet_client.write_row(inser_patint_values, position=previous_patient_position_id + 1)
     logger.info("Insert new patient %s values %s", patient.code, inser_patint_values)
 
 
@@ -313,6 +336,25 @@ def update_patients_payments_count(
         logger.info("Inserted %s payments count by the date: %s", payments_count, payment_count_date)
 
 
+def get_nearest_lover_patient_by_id(patients: list[Patient], target_id: int) -> Patient | None:
+    if not patients:
+        return None
+
+    sorted_patients = sorted(patients, key=lambda x: x.code)
+
+    if target_id <= sorted_patients[0].code:
+        return None
+
+    nearest_patient = None
+    for patient in sorted_patients:
+        if patient.code < target_id:
+            nearest_patient = patient
+        else:
+            break
+
+    return nearest_patient
+
+
 def inser_not_exist_patients_excel(patients: list[Patient]):
     google_sheet_client = GoogleSheetsClient(
         google_sheets_key=settings.GOOGLE_SPREADSHEET_KEY,
@@ -321,6 +363,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
     )
 
     patients_payments_count_grouped_by_date: dict[datetime, list[Patient]] = {}
+    previous_patients = []
 
     for patient in patients:
         is_patient_exist = set_patient_row_position(
@@ -329,14 +372,17 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
         )
 
         if not is_patient_exist:
-            insert_new_patient(patient=patient, google_sheet_client=google_sheet_client)
+            nearest_patient = get_nearest_lover_patient_by_id(patients=previous_patients, target_id=patient.code)
+
+            insert_new_patient(
+                patient=patient, nearest_patient=nearest_patient, google_sheet_client=google_sheet_client
+            )
             set_patient_row_position(
                 patient=patient,
                 google_sheet_client=google_sheet_client,
             )
         else:
-            update_patient_treatment_plan(patient=patient, google_sheet_client=google_sheet_client)
-            update_patient_visits_count(patient=patient, google_sheet_client=google_sheet_client)
+            update_patient_data(patient=patient, google_sheet_client=google_sheet_client)
 
         update_patient_invoices(patient=patient, google_sheet_client=google_sheet_client)
 
@@ -344,6 +390,8 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
             patient=patient,
             patients_payments_count_grouped_by_date=patients_payments_count_grouped_by_date,
         )
+
+        previous_patients.append(patient)
 
     update_patients_payments_count(
         patients_payments_count_grouped_by_date=patients_payments_count_grouped_by_date,

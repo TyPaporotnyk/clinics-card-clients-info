@@ -49,7 +49,7 @@ class Patient:
     id: str
     first_name: str
     last_name: str
-    code: str
+    code: int
     curator: str
     first_visit_date: str | None
     last_visit_date: str | None
