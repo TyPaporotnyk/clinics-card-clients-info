@@ -62,7 +62,7 @@ class GoogleSheetsClient:
     def update_cells(self, updates: list[tuple[int, int, str]]):
         cells = []
         for row, col, value in updates:
-            cell = Cell(row=row, col=col, value=str(value))
+            cell = Cell(row=row, col=col, value=value)
             cells.append(cell)
 
             # Обновляем кеш
