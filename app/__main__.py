@@ -194,9 +194,8 @@ def update_patient_data(patient: Patient, google_sheet_client: GoogleSheetsClien
     visits_count = visits_count if visits_count else ""
 
     updates = [
-        (patient.row_position, ColumnElementId.FULL_NAME.value, full_name)(
-            patient.row_position, ColumnElementId.TREATMENT_PLAN.value, treatment_plan
-        ),
+        (patient.row_position, ColumnElementId.FULL_NAME.value, full_name),
+        (patient.row_position, ColumnElementId.TREATMENT_PLAN.value, treatment_plan),
         (patient.row_position, ColumnElementId.VISITS_COUNT.value, visits_count),
     ]
 
