@@ -16,7 +16,7 @@ def retry_request(retries=5, delay=10):
                 try:
                     return func(*args, **kwargs)
                 except APIError as e:
-                    if e.response.status_code in [500, 503]:
+                    if e.response.status_code in [500, 503, 409]:
                         logger.warning("Retrying... (%s / %s) wait for %s secconds", attempt + 1, retries, delay)
                         time.sleep(delay)
                     else:
