@@ -42,6 +42,7 @@ class Invoice:
     patient_id: str
     date_created: datetime
     amount: str
+    purpose: str
 
 
 @dataclass
