@@ -367,10 +367,10 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
         )
 
         if not is_patient_exist:
-            nearest_patient = get_nearest_lover_patient_by_id(patients=previous_patients, target_id=patient.code)
-
+            # nearest_patient = get_nearest_lover_patient_by_id(patients=previous_patients, target_id=patient.code)
+            previous_patient = previous_patients[-1]
             insert_new_patient(
-                patient=patient, nearest_patient=nearest_patient, google_sheet_client=google_sheet_client
+                patient=patient, nearest_patient=previous_patient, google_sheet_client=google_sheet_client
             )
             set_patient_row_position(
                 patient=patient,
