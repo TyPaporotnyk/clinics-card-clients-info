@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 PAYMENT_DATE_INDEXES: dict[datetime, tuple[int, int]] = {}
 # CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)  # noqa
-CURRENT_DATE = datetime(year=2025, month=5, day=26)  # noqa
+CURRENT_DATE = datetime(year=2025, month=5, day=1)  # noqa
 
 
 class ColumnElementId(Enum):
