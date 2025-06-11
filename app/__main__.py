@@ -18,8 +18,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 PAYMENT_DATE_INDEXES: dict[datetime, tuple[int, int]] = {}
-CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)  # noqa
-# CURRENT_DATE = datetime(year=2025, month=3, day=14)  # noqa
+# CURRENT_DATE = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)  # noqa
+CURRENT_DATE = datetime(year=2025, month=5, day=26)  # noqa
 
 
 class ColumnElementId(Enum):
@@ -361,6 +361,10 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
     previous_patients = []
 
     for patient in patients:
+        if len(patient.visits) == 0:
+            logger.info("Patient %s has no visits", patient.code)
+            continue
+
         is_patient_exist = set_patient_row_position(
             patient=patient,
             google_sheet_client=google_sheet_client,
