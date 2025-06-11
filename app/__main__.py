@@ -168,7 +168,7 @@ def get_inisert_patient_values(patient: Patient):
     visits_count = len([visit for visit in patient.visits if visit.status == "VISITED"])
     visits_count = visits_count if visits_count else ""
     treatment_plan = patient.main_plans.plan_total_with_discount if patient.main_plans else ""
-    treatment_plan = int(float(treatment_plan)) if treatment_plan else ""
+    treatment_plan = int(float(treatment_plan)) if treatment_plan else 0
 
     return [
         "",
