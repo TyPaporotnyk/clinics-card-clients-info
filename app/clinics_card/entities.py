@@ -60,3 +60,7 @@ class Patient:
     payments: list[Payment] = field(default_factory=list, kw_only=True)
     visits: list[Visit] = field(default_factory=list, kw_only=True)
     invoices: list[Invoice] = field(default_factory=list, kw_only=True)
+
+    @property
+    def visits_count(self) -> int:
+        return len([visit for visit in self.visits if visit.status == "VISITED"])

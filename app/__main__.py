@@ -165,8 +165,6 @@ def get_all_patient_data() -> list[Patient]:
 def get_inisert_patient_values(patient: Patient):
     full_name = f"{patient.last_name} {patient.first_name}"
     first_doctor = patient.visits[0].doctor if patient.visits else ""
-    visits_count = len([visit for visit in patient.visits if visit.status == "VISITED"])
-    visits_count = visits_count if visits_count else ""
     treatment_plan = patient.main_plans.plan_total_with_discount if patient.main_plans else ""
     treatment_plan = int(float(treatment_plan)) if treatment_plan else 0
 
@@ -177,7 +175,7 @@ def get_inisert_patient_values(patient: Patient):
         patient.code,
         patient.curator,
         first_doctor,
-        visits_count,
+        patient.visits_count,
         "",
         "",
         treatment_plan,
@@ -361,7 +359,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
     previous_patients = []
 
     for patient in patients:
-        if len(patient.visits) == 0:
+        if patient.visits_count == 0:
             logger.info("Patient %s has no visits", patient.code)
             continue
 
