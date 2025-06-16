@@ -23,8 +23,9 @@ CURRENT_DATE = datetime(year=2025, month=5, day=1)  # noqa
 
 
 class ColumnElementId(Enum):
-    TREATMENT_PLAN = 10
+    TREATMENT_PLAN = 11
     VISITS_COUNT = 7
+    FIRST_VISIT_DATE = 8
     FULL_NAME = 3
 
 
@@ -176,6 +177,7 @@ def get_inisert_patient_values(patient: Patient):
         patient.curator,
         first_doctor,
         patient.visits_count,
+        patient.first_visit_date,
         "",
         "",
         treatment_plan,
@@ -195,6 +197,7 @@ def update_patient_data(patient: Patient, google_sheet_client: GoogleSheetsClien
         (patient.row_position, ColumnElementId.FULL_NAME.value, full_name),
         (patient.row_position, ColumnElementId.TREATMENT_PLAN.value, treatment_plan),
         (patient.row_position, ColumnElementId.VISITS_COUNT.value, visits_count),
+        (patient.row_position, ColumnElementId.FIRST_VISIT_DATE.value, patient.first_visit_date),
     ]
 
     google_sheet_client.update_cells(updates)
@@ -400,4 +403,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    logger.info("Strart...")
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        logger.error("Program raise global error: %s", repr(e))
+
+    logger.info("Program finish")
