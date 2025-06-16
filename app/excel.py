@@ -37,10 +37,15 @@ class GoogleSheetsClient:
             # Инвалидируем кеш для затронутых строк
             self._row_cache.clear()
             self._cell_cache.clear()
+            # Очищаем кеш последней строки
+            if "last_row" in self._find_cache:
+                del self._find_cache["last_row"]
         else:
             self.sheet.insert_row(row)
             self._row_cache.clear()
             self._cell_cache.clear()
+            if "last_row" in self._find_cache:
+                del self._find_cache["last_row"]
 
     @retry_request()
     @rate_limit(max_requests=60, per_seconds=60)
@@ -77,6 +82,19 @@ class GoogleSheetsClient:
 
         # Обновляем все ячейки одним запросом
         self.sheet.update_cells(cells)
+
+    @retry_request()
+    @rate_limit(max_requests=60, per_seconds=60)
+    def get_last_row(self) -> int:
+        """Получает номер последней заполненной строки"""
+        cache_key = "last_row"
+        if cache_key not in self._find_cache:
+            # Получаем все значения первой колонки
+            col_values = self.get_column_values()
+            # Находим последнюю непустую строку
+            last_row = len([val for val in col_values if val.strip()])
+            self._find_cache[cache_key] = last_row
+        return self._find_cache[cache_key]
 
     @retry_request()
     @rate_limit(max_requests=60, per_seconds=60)

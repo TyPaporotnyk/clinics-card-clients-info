@@ -256,11 +256,13 @@ def set_patient_row_position(
     return is_patient_exist
 
 
-def insert_new_patient(patient: Patient, nearest_patient: Patient | None, google_sheet_client: GoogleSheetsClient):
+def insert_new_patient(patient: Patient, google_sheet_client: GoogleSheetsClient):
     inser_patint_values = get_inisert_patient_values(patient=patient)
-    previous_patient_position_id = nearest_patient.row_position if nearest_patient else 7
-    google_sheet_client.write_row(inser_patint_values, position=previous_patient_position_id + 1)
-    logger.info("Insert new patient %s values %s", patient.code, inser_patint_values)
+    last_row = google_sheet_client.get_last_row()
+    google_sheet_client.write_row(inser_patint_values, position=last_row + 1)
+    logger.info(
+        "Insert new patient %s values %s at the end of table (row %d)", patient.code, inser_patint_values, last_row + 1
+    )
 
 
 def get_patient_invoice_sums_grouped_by_datetime(patient: Patient) -> dict[datetime, int]:
@@ -369,11 +371,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
         )
 
         if not is_patient_exist:
-            # nearest_patient = get_nearest_lover_patient_by_id(patients=previous_patients, target_id=patient.code)
-            previous_patient = previous_patients[-1]
-            insert_new_patient(
-                patient=patient, nearest_patient=previous_patient, google_sheet_client=google_sheet_client
-            )
+            insert_new_patient(patient=patient, google_sheet_client=google_sheet_client)
             set_patient_row_position(
                 patient=patient,
                 google_sheet_client=google_sheet_client,
