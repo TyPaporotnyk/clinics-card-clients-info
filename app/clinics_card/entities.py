@@ -41,7 +41,7 @@ class Invoice:
     id: str
     patient_id: str
     date_created: datetime
-    amount: str
+    amount: float
     purpose: str
 
 

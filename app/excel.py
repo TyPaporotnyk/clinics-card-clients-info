@@ -50,9 +50,9 @@ class GoogleSheetsClient:
     @retry_request()
     @rate_limit(max_requests=60, per_seconds=60)
     def get_column_values(self) -> list[str]:
-        col_key = 1  # Первая колонка
+        col_key = 3  # Первая колонка
         if col_key not in self._col_cache:
-            self._col_cache[col_key] = self.sheet.col_values(1)
+            self._col_cache[col_key] = self.sheet.col_values(col_key)
         return self._col_cache[col_key]
 
     @retry_request()
@@ -92,7 +92,7 @@ class GoogleSheetsClient:
             # Получаем все значения первой колонки
             col_values = self.get_column_values()
             # Находим последнюю непустую строку
-            last_row = len([val for val in col_values if val.strip()])
+            last_row = len([val for val in col_values])
             self._find_cache[cache_key] = last_row
         return self._find_cache[cache_key]
 

@@ -31,7 +31,7 @@ class ClinicsCardInvoice(ClinicsCard):
                 id=raw_invoice["id"],
                 patient_id=str(raw_invoice["patient_id"]),
                 purpose=raw_invoice["purpose"],
-                amount=self._get_invoice_amount(raw_invoice["invoice_items"]),
+                amount=raw_invoice["amount"],
                 date_created=datetime.strptime(raw_invoice["date_created"], "%Y-%m-%d"),
             )
             for raw_invoice in raw_invoices

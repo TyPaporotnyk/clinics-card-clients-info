@@ -244,10 +244,6 @@ def set_patient_row_position(
     patient: Patient,
     google_sheet_client: GoogleSheetsClient,
 ) -> bool:
-    """
-    Returns:
-        bool: return True if patient is exist
-    """
     is_patient_exist = False
     try:
         patient.row_position = google_sheet_client.find(patient.code, in_column=4)[1]
@@ -263,9 +259,7 @@ def insert_new_patient(patient: Patient, google_sheet_client: GoogleSheetsClient
     inser_patint_values = get_inisert_patient_values(patient=patient)
     last_row = google_sheet_client.get_last_row()
     google_sheet_client.write_row(inser_patint_values, position=last_row + 1)
-    logger.info(
-        "Insert new patient %s values %s at the end of table (row %d)", patient.code, inser_patint_values, last_row + 1
-    )
+    logger.info("Insert new patient %s values %s", patient.code, inser_patint_values)
 
 
 def get_patient_invoice_sums_grouped_by_datetime(patient: Patient) -> dict[datetime, int]:
@@ -375,10 +369,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 
         if not is_patient_exist:
             insert_new_patient(patient=patient, google_sheet_client=google_sheet_client)
-            set_patient_row_position(
-                patient=patient,
-                google_sheet_client=google_sheet_client,
-            )
+            set_patient_row_position(patient=patient, google_sheet_client=google_sheet_client)
         else:
             update_patient_data(patient=patient, google_sheet_client=google_sheet_client)
 
@@ -400,6 +391,14 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 def main():
     patients = get_all_patient_data()
     inser_not_exist_patients_excel(patients=patients)
+
+    # google_sheet_client = GoogleSheetsClient(
+    #     google_sheets_key=settings.GOOGLE_SPREADSHEET_KEY,
+    #     worksheet_name=settings.GOOGLE_WORKSHEET_NAME,
+    #     token_path="data/token.json",
+    # )
+
+    # logger.info(google_sheet_client.get_last_row())
 
 
 if __name__ == "__main__":
