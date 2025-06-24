@@ -2,6 +2,7 @@ import calendar
 import logging
 from datetime import datetime, timedelta  # noqa
 from enum import Enum
+from operator import attrgetter
 
 from httpx import Client
 
@@ -390,6 +391,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 
 def main():
     patients = get_all_patient_data()
+    patients = sorted(patients, key=attrgetter("first_visit_date"))
     inser_not_exist_patients_excel(patients=patients)
 
     # google_sheet_client = GoogleSheetsClient(
