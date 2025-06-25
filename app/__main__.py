@@ -159,7 +159,8 @@ def get_all_patient_data() -> list[Patient]:
         patient_map[invoice.patient_id].invoices.append(invoice)
 
     patients = patient_map.values()
-    patients = sorted(patients, key=lambda x: int(x.code))
+    patients = filter(lambda x: x.first_visit_date is not None, patients)
+    patients = sorted(patients, key=attrgetter("first_visit_date"))
 
     return patients
 
@@ -391,16 +392,7 @@ def inser_not_exist_patients_excel(patients: list[Patient]):
 
 def main():
     patients = get_all_patient_data()
-    patients = sorted(patients, key=attrgetter("first_visit_date"))
     inser_not_exist_patients_excel(patients=patients)
-
-    # google_sheet_client = GoogleSheetsClient(
-    #     google_sheets_key=settings.GOOGLE_SPREADSHEET_KEY,
-    #     worksheet_name=settings.GOOGLE_WORKSHEET_NAME,
-    #     token_path="data/token.json",
-    # )
-
-    # logger.info(google_sheet_client.get_last_row())
 
 
 if __name__ == "__main__":
